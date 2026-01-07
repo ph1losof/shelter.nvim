@@ -1,0 +1,16 @@
+[package]
+name = "shelter-core"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Native Rust core for shelter.nvim - EDF-compliant dotenv masking"
+repository = "https://github.com/philosofonusus/shelter.nvim"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+korni = { path = "../../../korni" }
+
+[build-dependencies]
+cbindgen = "0.27"
