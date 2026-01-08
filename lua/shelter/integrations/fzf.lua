@@ -3,25 +3,7 @@
 local M = {}
 
 local state = require("shelter.state")
-local config = require("shelter.config")
-
----Check if a file is an env file
----@param filename string
----@return boolean
-function M.is_env_file(filename)
-	local cfg = config.get()
-	local basename = vim.fn.fnamemodify(filename, ":t")
-
-	for _, pattern in ipairs(cfg.env_file_patterns or {}) do
-		local lua_pattern = pattern:gsub("%*", ".*")
-		lua_pattern = "^" .. lua_pattern .. "$"
-		if basename:match(lua_pattern) then
-			return true
-		end
-	end
-
-	return false
-end
+local env_file = require("shelter.utils.env_file")
 
 ---Setup FZF previewer integration
 function M.setup()
@@ -68,7 +50,7 @@ function M.setup()
 
 		-- Apply masking if env file
 		local basename = vim.fn.fnamemodify(filename, ":t")
-		if M.is_env_file(filename) then
+		if env_file.is_env_file(filename) then
 			local buffer = require("shelter.integrations.buffer")
 			buffer.shelter_preview_buffer(bufnr, basename)
 		end

@@ -18,11 +18,16 @@ local function wait_for_schedule()
 end
 
 -- Helper to create a test buffer with content
-local function create_test_buffer(content, filename)
+local function create_test_buffer(content, filename, filetype)
   filename = filename or "test.env"
+  filetype = filetype or "dotenv"
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(bufnr, filename)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(content, "\n"))
+  -- Set filetype for env files (needed for is_env_buffer check)
+  if filetype then
+    vim.bo[bufnr].filetype = filetype
+  end
   return bufnr
 end
 
@@ -70,7 +75,7 @@ describe("shelter.integrations.buffer", function()
     end)
 
     it("does not apply masks to non-env files", function()
-      test_bufnr = create_test_buffer("SECRET=mysecret", "config.json")
+      test_bufnr = create_test_buffer("SECRET=mysecret", "config.json", "json")
 
       buffer.shelter_buffer(test_bufnr)
 

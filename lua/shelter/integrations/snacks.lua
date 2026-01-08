@@ -3,25 +3,7 @@
 local M = {}
 
 local state = require("shelter.state")
-local config = require("shelter.config")
-
----Check if a file is an env file
----@param filename string
----@return boolean
-function M.is_env_file(filename)
-	local cfg = config.get()
-	local basename = vim.fn.fnamemodify(filename, ":t")
-
-	for _, pattern in ipairs(cfg.env_file_patterns or {}) do
-		local lua_pattern = pattern:gsub("%*", ".*")
-		lua_pattern = "^" .. lua_pattern .. "$"
-		if basename:match(lua_pattern) then
-			return true
-		end
-	end
-
-	return false
-end
+local env_file = require("shelter.utils.env_file")
 
 ---Setup Snacks previewer integration
 function M.setup()
@@ -51,7 +33,7 @@ function M.setup()
 		end
 
 		-- Apply masking if enabled and is env file
-		if state.is_enabled("snacks_previewer") and filename and M.is_env_file(filename) then
+		if state.is_enabled("snacks_previewer") and filename and env_file.is_env_file(filename) then
 			vim.schedule(function()
 				if ctx.buf and vim.api.nvim_buf_is_valid(ctx.buf) then
 					local buffer = require("shelter.integrations.buffer")

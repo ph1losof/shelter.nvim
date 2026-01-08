@@ -401,14 +401,18 @@ function M.peek_line(bufnr, line_num)
 	-- Set timer to hide after duration
 	local uv = vim.uv or vim.loop
 	peek_timer = uv.new_timer()
-	peek_timer:start(PEEK_DURATION, 0, vim.schedule_wrap(function()
-		M.hide_line(bufnr, line_num)
-		if peek_timer then
-			peek_timer:stop()
-			peek_timer:close()
-			peek_timer = nil
-		end
-	end))
+	peek_timer:start(
+		PEEK_DURATION,
+		0,
+		vim.schedule_wrap(function()
+			M.hide_line(bufnr, line_num)
+			if peek_timer then
+				peek_timer:stop()
+				peek_timer:close()
+				peek_timer = nil
+			end
+		end)
+	)
 end
 
 ---Hide a peeked line

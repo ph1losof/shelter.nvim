@@ -3,25 +3,7 @@
 local M = {}
 
 local state = require("shelter.state")
-local config = require("shelter.config")
-
----Check if a file is an env file
----@param filename string
----@return boolean
-function M.is_env_file(filename)
-	local cfg = config.get()
-	local basename = vim.fn.fnamemodify(filename, ":t")
-
-	for _, pattern in ipairs(cfg.env_file_patterns or {}) do
-		local lua_pattern = pattern:gsub("%*", ".*")
-		lua_pattern = "^" .. lua_pattern .. "$"
-		if basename:match(lua_pattern) then
-			return true
-		end
-	end
-
-	return false
-end
+local env_file = require("shelter.utils.env_file")
 
 ---Create a masked buffer previewer
 ---@param preview_type "file"|"grep"
@@ -78,7 +60,7 @@ local function create_masked_previewer(preview_type)
 
 						-- Apply masking if env file
 						local filename = vim.fn.fnamemodify(path, ":t")
-						if M.is_env_file(filename) then
+						if env_file.is_env_file(filename) then
 							local buffer = require("shelter.integrations.buffer")
 							buffer.shelter_preview_buffer(bufnr, filename)
 						end

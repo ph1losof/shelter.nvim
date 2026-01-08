@@ -18,6 +18,7 @@ local M = {}
 
 local config = require("shelter.config")
 local state = require("shelter.state")
+local module_validation = require("shelter.utils.module_validation")
 
 ---@type boolean
 local is_setup = false
@@ -57,103 +58,58 @@ function M.setup(opts)
   is_setup = true
 end
 
--- Module name aliases for convenience
-local MODULE_ALIASES = {
-  buffer = "files",
-  telescope = "telescope_previewer",
-  fzf = "fzf_previewer",
-  snacks = "snacks_previewer",
-}
-
--- Valid module names
-local VALID_MODULES = {
-  "files",
-  "telescope_previewer",
-  "fzf_previewer",
-  "snacks_previewer",
-}
-
----Normalize module name (handle aliases)
----@param name string|nil
----@return string|nil
-local function normalize_module(name)
-  if not name then
-    return nil
-  end
-  return MODULE_ALIASES[name] or name
-end
-
----Check if module name is valid
----@param name string
----@return boolean
-local function is_valid_module(name)
-  return vim.tbl_contains(VALID_MODULES, name)
-end
-
 ---Handle toggle command
 ---@param target string|nil Module name or nil for all
 function M._handle_toggle(target)
-  local module = normalize_module(target)
-
-  if module then
-    -- Toggle specific module
-    if not is_valid_module(module) then
-      vim.notify("shelter.nvim: Unknown module: " .. target, vim.log.levels.ERROR)
-      return
+  module_validation.with_validation(
+    target,
+    function(module)
+      local enabled = state.toggle(module)
+      vim.notify(
+        string.format("shelter.nvim: %s %s", module, enabled and "enabled" or "disabled"),
+        vim.log.levels.INFO
+      )
+    end,
+    function()
+      local enabled = state.toggle_all_user_modules()
+      vim.notify(
+        string.format("shelter.nvim: All modules %s", enabled and "enabled" or "disabled"),
+        vim.log.levels.INFO
+      )
     end
-    local enabled = state.toggle(module)
-    vim.notify(
-      string.format("shelter.nvim: %s %s", module, enabled and "enabled" or "disabled"),
-      vim.log.levels.INFO
-    )
-  else
-    -- Toggle all user-enabled modules
-    local enabled = state.toggle_all_user_modules()
-    vim.notify(
-      string.format("shelter.nvim: All modules %s", enabled and "enabled" or "disabled"),
-      vim.log.levels.INFO
-    )
-  end
+  )
 end
 
 ---Handle enable command
 ---@param target string|nil Module name or nil for all
 function M._handle_enable(target)
-  local module = normalize_module(target)
-
-  if module then
-    -- Enable specific module
-    if not is_valid_module(module) then
-      vim.notify("shelter.nvim: Unknown module: " .. target, vim.log.levels.ERROR)
-      return
+  module_validation.with_validation(
+    target,
+    function(module)
+      state.set_enabled(module, true)
+      vim.notify("shelter.nvim: " .. module .. " enabled", vim.log.levels.INFO)
+    end,
+    function()
+      state.enable_all_user_modules()
+      vim.notify("shelter.nvim: All modules enabled", vim.log.levels.INFO)
     end
-    state.set_enabled(module, true)
-    vim.notify("shelter.nvim: " .. module .. " enabled", vim.log.levels.INFO)
-  else
-    -- Enable all user modules
-    state.enable_all_user_modules()
-    vim.notify("shelter.nvim: All modules enabled", vim.log.levels.INFO)
-  end
+  )
 end
 
 ---Handle disable command
 ---@param target string|nil Module name or nil for all
 function M._handle_disable(target)
-  local module = normalize_module(target)
-
-  if module then
-    -- Disable specific module
-    if not is_valid_module(module) then
-      vim.notify("shelter.nvim: Unknown module: " .. target, vim.log.levels.ERROR)
-      return
+  module_validation.with_validation(
+    target,
+    function(module)
+      state.set_enabled(module, false)
+      vim.notify("shelter.nvim: " .. module .. " disabled", vim.log.levels.INFO)
+    end,
+    function()
+      state.disable_all_user_modules()
+      vim.notify("shelter.nvim: All modules disabled", vim.log.levels.INFO)
     end
-    state.set_enabled(module, false)
-    vim.notify("shelter.nvim: " .. module .. " disabled", vim.log.levels.INFO)
-  else
-    -- Disable all modules
-    state.disable_all_user_modules()
-    vim.notify("shelter.nvim: All modules disabled", vim.log.levels.INFO)
-  end
+  )
 end
 
 ---Create user commands
@@ -195,10 +151,9 @@ function M._setup_commands()
         end, subcommands)
       elseif #args == 3 and vim.tbl_contains({ "toggle", "enable", "disable" }, args[2]) then
         -- Complete module name
-        local modules = { "files", "telescope_previewer", "fzf_previewer", "snacks_previewer" }
         return vim.tbl_filter(function(mod)
           return mod:find(arglead, 1, true) == 1
-        end, modules)
+        end, module_validation.VALID_MODULES)
       end
 
       return {}
