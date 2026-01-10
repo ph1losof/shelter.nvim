@@ -35,26 +35,14 @@ local definition = {
 	---@param ctx ShelterModeContext
 	---@return string
 	apply = function(self, ctx)
-		local native_ok, native = pcall(require, "shelter.native")
 		local mask_char = self:get_option("mask_char", "*")
 		local fixed_length = self:get_option("fixed_length")
 
-		-- Use fixed length if specified
+		-- Pure Lua - faster than FFI for simple string operations
 		if fixed_length then
-			if native_ok then
-				return native.mask_fixed(ctx.value, mask_char, fixed_length)
-			else
-				return string.rep(mask_char, fixed_length)
-			end
+			return string.rep(mask_char, fixed_length)
 		end
-
-		-- Full masking with preserved length
-		if native_ok then
-			return native.mask_full(ctx.value, mask_char)
-		else
-			-- Fallback: pure Lua implementation
-			return string.rep(mask_char, #ctx.value)
-		end
+		return string.rep(mask_char, #ctx.value)
 	end,
 
 	---@param options table

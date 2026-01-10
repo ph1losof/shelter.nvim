@@ -118,8 +118,8 @@ function M.shelter_buffer(bufnr, sync, force)
 	local line_offsets = result.line_offsets
 	assert(line_offsets and #line_offsets > 0, "shelter.nvim: line_offsets not provided by native parser")
 
-	-- Apply masks (sync mode for paste protection)
-	extmarks.apply_masks(bufnr, result.masks, line_offsets, sync)
+	-- Apply masks (sync mode for paste protection, pass lines to avoid double read)
+	extmarks.apply_masks(bufnr, result.masks, line_offsets, lines, sync)
 end
 
 ---Shelter a preview buffer (for picker integrations)
@@ -156,8 +156,8 @@ function M.shelter_preview_buffer(bufnr, filename, filetype)
 		return
 	end
 
-	-- Apply masks
-	extmarks.apply_masks(bufnr, result.masks, line_offsets)
+	-- Apply masks (pass lines to avoid double read)
+	extmarks.apply_masks(bufnr, result.masks, line_offsets, lines)
 end
 
 ---Unshelter a buffer (remove masks)
@@ -256,8 +256,8 @@ function M.setup()
 	engine.init()
 
 	-- Setup paste override for protection
-	paste.setup(function(bufnr, masks, line_offsets, sync)
-		extmarks.apply_masks(bufnr, masks, line_offsets, sync)
+	paste.setup(function(bufnr, masks, line_offsets, lines, sync)
+		extmarks.apply_masks(bufnr, masks, line_offsets, lines, sync)
 	end, function(content, source)
 		return masking.generate_masks(content, source)
 	end)

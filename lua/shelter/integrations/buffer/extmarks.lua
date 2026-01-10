@@ -8,7 +8,6 @@ local state = require("shelter.state")
 -- Fast locals for hot path
 local api = vim.api
 local nvim_buf_is_valid = api.nvim_buf_is_valid
-local nvim_buf_get_lines = api.nvim_buf_get_lines
 local nvim_buf_set_extmark = api.nvim_buf_set_extmark
 local nvim_buf_clear_namespace = api.nvim_buf_clear_namespace
 local nvim_create_namespace = api.nvim_create_namespace
@@ -164,15 +163,15 @@ end
 ---@param bufnr number
 ---@param masks ShelterMaskedLine[]
 ---@param line_offsets number[] Pre-computed line offsets from Rust
+---@param lines string[] Buffer lines (passed to avoid double read)
 ---@param sync? boolean If true, apply synchronously (for paste protection)
-function M.apply_masks(bufnr, masks, line_offsets, sync)
+function M.apply_masks(bufnr, masks, line_offsets, lines, sync)
 	local ns = M.get_namespace()
 	local cfg = config.get()
 	local hl_group = cfg.highlight_group or "Comment"
 	local mask_char = cfg.mask_char or "*"
 
-	-- Get all lines for calculating column positions
-	local lines = nvim_buf_get_lines(bufnr, 0, -1, false)
+	-- Use provided lines (avoids redundant buffer read)
 
 	-- Collect extmarks for batched application
 	local extmarks = {}

@@ -25,7 +25,7 @@ function M.is_paste_in_progress()
 end
 
 ---Setup paste override to protect sheltered content
----@param apply_masks_fn fun(bufnr: number, masks: table, line_offsets: table, sync: boolean) Function to apply masks
+---@param apply_masks_fn fun(bufnr: number, masks: table, line_offsets: table, lines: string[], sync: boolean) Function to apply masks
 ---@param generate_masks_fn fun(content: string, source: string): table Function to generate masks
 function M.setup(apply_masks_fn, generate_masks_fn)
 	if original_paste then
@@ -94,7 +94,7 @@ function M.setup(apply_masks_fn, generate_masks_fn)
 		-- Generate and apply masks synchronously
 		local result = generate_masks_fn(content, bufname)
 		if result.line_offsets and #result.line_offsets > 0 then
-			apply_masks_fn(bufnr, result.masks, result.line_offsets, true) -- sync=true
+			apply_masks_fn(bufnr, result.masks, result.line_offsets, all_lines, true) -- sync=true
 		end
 
 		-- Restore lazyredraw and force a single redraw with masked content

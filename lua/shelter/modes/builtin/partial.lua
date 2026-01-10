@@ -51,7 +51,6 @@ local definition = {
 	---@param ctx ShelterModeContext
 	---@return string
 	apply = function(self, ctx)
-		local native_ok, native = pcall(require, "shelter.native")
 		local mask_char = self:get_option("mask_char", "*")
 		local show_start = self:get_option("show_start", 3)
 		local show_end = self:get_option("show_end", 3)
@@ -67,24 +66,14 @@ local definition = {
 			local fallback = self:get_option("fallback_mode", "full")
 			if fallback == "none" then
 				return value
-			else
-				-- Full mask
-				if native_ok then
-					return native.mask_full(value, mask_char)
-				else
-					return string.rep(mask_char, value_len)
-				end
 			end
+			-- Full mask
+			return string.rep(mask_char, value_len)
 		end
 
-		-- Partial masking
-		if native_ok then
-			return native.mask_partial(value, mask_char, show_start, show_end, min_mask)
-		else
-			-- Fallback: pure Lua implementation
-			local mask_len = value_len - show_start - show_end
-			return value:sub(1, show_start) .. string.rep(mask_char, mask_len) .. value:sub(-show_end)
-		end
+		-- Partial masking (pure Lua - faster than FFI for simple string ops)
+		local mask_len = value_len - show_start - show_end
+		return value:sub(1, show_start) .. string.rep(mask_char, mask_len) .. value:sub(-show_end)
 	end,
 
 	---@param options table
