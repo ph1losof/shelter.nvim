@@ -112,19 +112,18 @@ end
 
 ---Determine masking mode for a key (uses pre-compiled patterns)
 ---@param key string
----@param source string|nil
+---@param source_basename string|nil Pre-computed basename of source file (caller should cache this)
 ---@return string mode
-function M.determine_mode(key, source)
+function M.determine_mode(key, source_basename)
 	-- Check key patterns first (most specific wins)
 	local key_mode = M.match_key(key)
 	if key_mode then
 		return key_mode
 	end
 
-	-- Check source patterns
-	if source then
-		local source_name = vim.fn.fnamemodify(source, ":t")
-		local source_mode = M.match_source(source_name)
+	-- Check source patterns (basename already extracted by caller)
+	if source_basename then
+		local source_mode = M.match_source(source_basename)
 		if source_mode then
 			return source_mode
 		end

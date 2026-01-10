@@ -76,18 +76,18 @@ end
 
 ---Determine masking mode for a key based on patterns (uses pattern cache)
 ---@param key string
----@param source string
+---@param source_basename string|nil Pre-computed basename of source file
 ---@return string mode_name
-function M.determine_mode(key, source)
+function M.determine_mode(key, source_basename)
 	-- Use pre-compiled pattern cache if available
 	if pattern_cache.is_compiled() then
-		return pattern_cache.determine_mode(key, source)
+		return pattern_cache.determine_mode(key, source_basename)
 	end
 
 	-- Fallback: compile on demand (shouldn't happen after setup)
 	local cfg = config.get()
 	pattern_cache.compile(cfg)
-	return pattern_cache.determine_mode(key, source)
+	return pattern_cache.determine_mode(key, source_basename)
 end
 
 ---@class ShelterMaskContext
@@ -99,10 +99,12 @@ end
 ---Mask a single value
 ---@param value string
 ---@param context ShelterMaskContext
+---@param cfg? table Optional config (to avoid repeated lookups)
+---@param mode_name? string Optional pre-determined mode name
 ---@return string
-function M.mask_value(value, context)
-	local cfg = config.get()
-	local mode_name = M.determine_mode(context.key, context.source)
+function M.mask_value(value, context, cfg, mode_name)
+	cfg = cfg or config.get()
+	mode_name = mode_name or M.determine_mode(context.key, context.source)
 
 	-- Extend context with config for modes that need it
 	context.config = cfg
@@ -135,12 +137,25 @@ function M.generate_masks(content, source)
 	local parsed = M.parse_content(content)
 	local masks = {}
 
+	-- Cache source basename once (avoid vim.fn.fnamemodify per entry)
+	local source_basename = source and vim.fn.fnamemodify(source, ":t") or nil
+
+	-- Memoize key→mode mapping for this batch (same keys get same mode)
+	local mode_memo = {}
+
 	for _, entry in ipairs(parsed.entries) do
 		-- Skip comments only if skip_comments is true
 		-- When skip_comments is false, we mask values in comments too
 		local should_skip = entry.is_comment and skip_comments
 
 		if not should_skip then
+			-- Check memoized mode first
+			local mode_name = mode_memo[entry.key]
+			if not mode_name then
+				mode_name = pattern_cache.determine_mode(entry.key, source_basename)
+				mode_memo[entry.key] = mode_name
+			end
+
 			local context = {
 				key = entry.key,
 				source = source,
@@ -149,7 +164,7 @@ function M.generate_masks(content, source)
 				is_comment = entry.is_comment,
 			}
 
-			local mask = M.mask_value(entry.value, context)
+			local mask = M.mask_value(entry.value, context, cfg, mode_name)
 
 			masks[#masks + 1] = {
 				line_number = entry.line_number,

@@ -186,8 +186,8 @@ function M.apply_masks(bufnr, masks, line_offsets, lines, sync)
 			return
 		end
 
-		-- Clear extmarks to handle race conditions
-		nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+		-- Note: extmarks already cleared by shelter_buffer() before calling apply_masks()
+		-- No need to clear again here
 
 		for _, mark in ipairs(extmarks) do
 			pcall(nvim_buf_set_extmark, bufnr, ns, mark[1], mark[2], mark[3])
