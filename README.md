@@ -80,12 +80,12 @@ Measured on GitHub Actions (Ubuntu, averaged over 10 iterations):
 
 | Lines | shelter.nvim | cloak.nvim | Difference |
 |-------|--------------|------------|------------|
-| 10    | --.-- ms     | --.-- ms   | -- |
-| 50    | --.-- ms     | --.-- ms   | -- |
-| 100   | --.-- ms     | --.-- ms   | -- |
-| 500   | --.-- ms     | --.-- ms   | -- |
+| 10    | 0.10 ms      | 0.08 ms      | 1.3x slower |
+| 50    | 0.11 ms      | 0.21 ms      | 2.0x faster |
+| 100    | 0.19 ms      | 0.41 ms      | 2.1x faster |
+| 500    | 0.82 ms      | 1.85 ms      | 2.3x faster |
 
-*Benchmarks run automatically on push to main*
+*Last updated: 2026-01-10*
 <!-- BENCHMARK_END -->
 
 ## Requirements
