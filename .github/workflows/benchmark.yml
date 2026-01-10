@@ -90,29 +90,34 @@ jobs:
             const fs = require('fs');
             const results = JSON.parse(fs.readFileSync('benchmark_results.json', 'utf8'));
 
+            const calcDiff = (shelter, cloak) => {
+              if (!cloak || shelter <= 0) return '';
+              const ratio = cloak / shelter;
+              if (ratio > 1.05) return `${ratio.toFixed(1)}x faster`;
+              if (ratio < 0.95) return `${(1/ratio).toFixed(1)}x slower`;
+              return '~same';
+            };
+
+            const makeTable = (title, shelterKey, cloakKey) => {
+              let table = `#### ${title}\n\n`;
+              table += '| Lines | shelter.nvim | cloak.nvim | Difference |\n';
+              table += '|-------|--------------|------------|------------|\n';
+              const sizes = Object.keys(results.benchmarks).map(Number).sort((a, b) => a - b);
+              for (const size of sizes) {
+                const data = results.benchmarks[size];
+                const shelter = `${data[shelterKey].toFixed(2)} ms`;
+                const cloak = data[cloakKey] ? `${data[cloakKey].toFixed(2)} ms` : 'N/A';
+                const diff = calcDiff(data[shelterKey], data[cloakKey]);
+                table += `| ${size} | ${shelter} | ${cloak} | ${diff} |\n`;
+              }
+              return table;
+            };
+
             let body = '## Performance Benchmark Results\n\n';
             body += `Measured over ${results.metadata.iterations} iterations on Ubuntu:\n\n`;
-            body += '| Lines | shelter.nvim | cloak.nvim | Difference |\n';
-            body += '|-------|--------------|------------|------------|\n';
-
-            const sizes = Object.keys(results.benchmarks).map(Number).sort((a, b) => a - b);
-            for (const size of sizes) {
-              const data = results.benchmarks[size];
-              const shelter = `${data.shelter_ms.toFixed(2)} ms`;
-              const cloak = data.cloak_ms ? `${data.cloak_ms.toFixed(2)} ms` : 'N/A';
-              let diff = '';
-              if (data.cloak_ms && data.shelter_ms > 0) {
-                const ratio = data.cloak_ms / data.shelter_ms;
-                if (ratio > 1) {
-                  diff = `${ratio.toFixed(1)}x faster`;
-                } else if (ratio < 1) {
-                  diff = `${(1/ratio).toFixed(1)}x slower`;
-                } else {
-                  diff = 'same';
-                }
-              }
-              body += `| ${size} | ${shelter} | ${cloak} | ${diff} |\n`;
-            }
+            body += makeTable('Parsing Performance', 'shelter_parse_ms', 'cloak_parse_ms') + '\n';
+            body += makeTable('Preview Performance (Telescope)', 'shelter_preview_ms', 'cloak_preview_ms') + '\n';
+            body += makeTable('Edit Re-masking Performance', 'shelter_edit_ms', 'cloak_edit_ms');
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
