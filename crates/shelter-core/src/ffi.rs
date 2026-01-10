@@ -2,11 +2,9 @@
 //!
 //! These functions are exposed via the C ABI for LuaJIT FFI.
 
-use crate::masker;
-use crate::types::{ShelterEntry, ShelterMaskOptions, ShelterParseOptions, ShelterResult};
+use crate::types::{ShelterEntry, ShelterParseOptions, ShelterResult};
 use korni::Entry;
 use std::ffi::{c_char, CString};
-use std::ptr;
 use std::slice;
 
 /// Library version string
@@ -139,145 +137,6 @@ pub unsafe extern "C" fn shelter_free_result(result: *mut ShelterResult) {
     // Free error message if present
     if !result.error.is_null() {
         drop(CString::from_raw(result.error));
-    }
-}
-
-// =============================================================================
-//  Masking Functions
-// =============================================================================
-
-/// Mask a value with full masking (all characters replaced)
-///
-/// # Safety
-/// - `value` must be a valid pointer to a UTF-8 string
-/// - `value_len` must be the exact length of the string
-/// - Caller must free the result using `shelter_free_string`
-#[no_mangle]
-pub unsafe extern "C" fn shelter_mask_full(
-    value: *const c_char,
-    value_len: usize,
-    mask_char: c_char,
-) -> *mut c_char {
-    if value.is_null() {
-        return ptr::null_mut();
-    }
-
-    let value_slice = slice::from_raw_parts(value as *const u8, value_len);
-    let value_str = match std::str::from_utf8(value_slice) {
-        Ok(s) => s,
-        Err(_) => return ptr::null_mut(),
-    };
-
-    let mask_char = mask_char as u8 as char;
-    let masked = masker::mask_full(value_str, mask_char, None);
-
-    CString::new(masked)
-        .map(|s| s.into_raw())
-        .unwrap_or(ptr::null_mut())
-}
-
-/// Mask a value with partial masking (show start/end characters)
-///
-/// # Safety
-/// - `value` must be a valid pointer to a UTF-8 string
-/// - `value_len` must be the exact length of the string
-/// - Caller must free the result using `shelter_free_string`
-#[no_mangle]
-pub unsafe extern "C" fn shelter_mask_partial(
-    value: *const c_char,
-    value_len: usize,
-    mask_char: c_char,
-    show_start: usize,
-    show_end: usize,
-    min_mask: usize,
-) -> *mut c_char {
-    if value.is_null() {
-        return ptr::null_mut();
-    }
-
-    let value_slice = slice::from_raw_parts(value as *const u8, value_len);
-    let value_str = match std::str::from_utf8(value_slice) {
-        Ok(s) => s,
-        Err(_) => return ptr::null_mut(),
-    };
-
-    let mask_char = mask_char as u8 as char;
-    let masked = masker::mask_partial(value_str, mask_char, show_start, show_end, min_mask, None);
-
-    CString::new(masked)
-        .map(|s| s.into_raw())
-        .unwrap_or(ptr::null_mut())
-}
-
-/// Mask a value with fixed length output
-///
-/// # Safety
-/// - `value` must be a valid pointer to a UTF-8 string
-/// - `value_len` must be the exact length of the string
-/// - Caller must free the result using `shelter_free_string`
-#[no_mangle]
-pub unsafe extern "C" fn shelter_mask_fixed(
-    value: *const c_char,
-    value_len: usize,
-    mask_char: c_char,
-    output_len: usize,
-) -> *mut c_char {
-    if value.is_null() {
-        return ptr::null_mut();
-    }
-
-    let value_slice = slice::from_raw_parts(value as *const u8, value_len);
-    let value_str = match std::str::from_utf8(value_slice) {
-        Ok(s) => s,
-        Err(_) => return ptr::null_mut(),
-    };
-
-    let mask_char = mask_char as u8 as char;
-    let masked = masker::mask_fixed(value_str, mask_char, output_len);
-
-    CString::new(masked)
-        .map(|s| s.into_raw())
-        .unwrap_or(ptr::null_mut())
-}
-
-/// Mask a value using ShelterMaskOptions
-///
-/// # Safety
-/// - `value` must be a valid pointer to a UTF-8 string
-/// - `value_len` must be the exact length of the string
-/// - Caller must free the result using `shelter_free_string`
-#[no_mangle]
-pub unsafe extern "C" fn shelter_mask_value(
-    value: *const c_char,
-    value_len: usize,
-    options: ShelterMaskOptions,
-) -> *mut c_char {
-    if value.is_null() {
-        return ptr::null_mut();
-    }
-
-    let value_slice = slice::from_raw_parts(value as *const u8, value_len);
-    let value_str = match std::str::from_utf8(value_slice) {
-        Ok(s) => s,
-        Err(_) => return ptr::null_mut(),
-    };
-
-    let masked = masker::mask_value(value_str, &options);
-
-    CString::new(masked)
-        .map(|s| s.into_raw())
-        .unwrap_or(ptr::null_mut())
-}
-
-/// Free a string returned by masking functions
-///
-/// # Safety
-/// - `str` must be a valid pointer returned by a shelter masking function
-/// - Must not be called more than once on the same pointer
-#[no_mangle]
-pub unsafe extern "C" fn shelter_free_string(str: *mut c_char) {
-    if !str.is_null() {
-        drop(CString::from_raw(str));
     }
 }
 

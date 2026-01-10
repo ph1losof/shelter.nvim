@@ -265,11 +265,30 @@ end
 
 ---Mask a value directly
 ---@param value string Value to mask
----@param opts? ShelterMaskOpts Options
+---@param opts? ShelterMaskOpts Options (mode: "full"|"partial", mask_char, show_start, show_end)
 ---@return string masked
 function M.mask_value(value, opts)
-	local native = require("shelter.native")
-	return native.mask_value(value, opts)
+	opts = opts or {}
+	local mask_char = opts.mask_char or "*"
+	local mode = opts.mode or "full"
+
+	if mode == "partial" then
+		local show_start = opts.show_start or 3
+		local show_end = opts.show_end or 3
+		local min_mask = opts.min_mask or 3
+		local value_len = #value
+
+		if value_len <= show_start + show_end + min_mask then
+			return string.rep(mask_char, value_len)
+		end
+
+		local mask_len = value_len - show_start - show_end
+		return value:sub(1, show_start) .. string.rep(mask_char, mask_len) .. value:sub(-show_end)
+	end
+
+	-- Default: full mask
+	local output_len = opts.mask_length or #value
+	return string.rep(mask_char, output_len)
 end
 
 ---Peek at current line (temporarily reveal for 3 seconds)

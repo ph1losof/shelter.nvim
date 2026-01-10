@@ -38,25 +38,9 @@ typedef struct {
     uint8_t track_positions;
 } ShelterParseOptions;
 
-typedef struct {
-    char mask_char;
-    size_t mask_length;
-    uint8_t mode;
-    size_t show_start;
-    size_t show_end;
-    size_t min_mask;
-} ShelterMaskOptions;
-
 // Parsing functions
 ShelterResult* shelter_parse(const char* input, size_t input_len, ShelterParseOptions options);
 void shelter_free_result(ShelterResult* result);
-
-// Masking functions
-char* shelter_mask_full(const char* value, size_t value_len, char mask_char);
-char* shelter_mask_partial(const char* value, size_t value_len, char mask_char, size_t show_start, size_t show_end, size_t min_mask);
-char* shelter_mask_fixed(const char* value, size_t value_len, char mask_char, size_t output_len);
-char* shelter_mask_value(const char* value, size_t value_len, ShelterMaskOptions options);
-void shelter_free_string(char* str);
 
 // Utility functions
 const char* shelter_version(void);
@@ -212,105 +196,6 @@ function M.parse(content, opts)
 		entries = entries,
 		line_offsets = line_offsets,
 	}
-end
-
----Mask a value with full masking (all characters replaced)
----@param value string
----@param mask_char? string Default: "*"
----@return string
-function M.mask_full(value, mask_char)
-	local l = ensure_lib()
-	mask_char = mask_char or "*"
-	local char_byte = string.byte(mask_char)
-
-	local result = l.shelter_mask_full(value, #value, char_byte)
-	if result == nil then
-		return string.rep(mask_char, #value)
-	end
-
-	local masked = ffi.string(result)
-	l.shelter_free_string(result)
-	return masked
-end
-
----Mask a value with partial masking (show start/end characters)
----@param value string
----@param mask_char? string Default: "*"
----@param show_start? number Default: 3
----@param show_end? number Default: 3
----@param min_mask? number Default: 3
----@return string
-function M.mask_partial(value, mask_char, show_start, show_end, min_mask)
-	local l = ensure_lib()
-	mask_char = mask_char or "*"
-	show_start = show_start or 3
-	show_end = show_end or 3
-	min_mask = min_mask or 3
-	local char_byte = string.byte(mask_char)
-
-	local result = l.shelter_mask_partial(value, #value, char_byte, show_start, show_end, min_mask)
-	if result == nil then
-		return string.rep(mask_char, #value)
-	end
-
-	local masked = ffi.string(result)
-	l.shelter_free_string(result)
-	return masked
-end
-
----Mask a value with fixed length output
----@param value string
----@param mask_char? string Default: "*"
----@param output_len number
----@return string
-function M.mask_fixed(value, mask_char, output_len)
-	local l = ensure_lib()
-	mask_char = mask_char or "*"
-	local char_byte = string.byte(mask_char)
-
-	local result = l.shelter_mask_fixed(value, #value, char_byte, output_len)
-	if result == nil then
-		return string.rep(mask_char, output_len)
-	end
-
-	local masked = ffi.string(result)
-	l.shelter_free_string(result)
-	return masked
-end
-
----@class ShelterMaskOpts
----@field mask_char? string Default: "*"
----@field mask_length? number Fixed output length (0 = match value length)
----@field mode? "full"|"partial" Default: "full"
----@field show_start? number For partial mode
----@field show_end? number For partial mode
----@field min_mask? number Minimum mask characters for partial mode
-
----Mask a value with options
----@param value string
----@param opts? ShelterMaskOpts
----@return string
-function M.mask_value(value, opts)
-	local l = ensure_lib()
-	opts = opts or {}
-
-	local mask_opts = ffi.new("ShelterMaskOptions", {
-		mask_char = string.byte(opts.mask_char or "*"),
-		mask_length = opts.mask_length or 0,
-		mode = opts.mode == "partial" and 1 or 0,
-		show_start = opts.show_start or 0,
-		show_end = opts.show_end or 0,
-		min_mask = opts.min_mask or 3,
-	})
-
-	local result = l.shelter_mask_value(value, #value, mask_opts)
-	if result == nil then
-		return string.rep(opts.mask_char or "*", #value)
-	end
-
-	local masked = ffi.string(result)
-	l.shelter_free_string(result)
-	return masked
 end
 
 return M
