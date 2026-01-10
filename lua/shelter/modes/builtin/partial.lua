@@ -51,10 +51,12 @@ local definition = {
 	---@param ctx ShelterModeContext
 	---@return string
 	apply = function(self, ctx)
-		local mask_char = self:get_option("mask_char", "*")
-		local show_start = self:get_option("show_start", 3)
-		local show_end = self:get_option("show_end", 3)
-		local min_mask = self:get_option("min_mask", 3)
+		-- Direct property access - options pre-resolved at config time
+		local opts = self.options
+		local mask_char = opts.mask_char
+		local show_start = opts.show_start
+		local show_end = opts.show_end
+		local min_mask = opts.min_mask
 
 		local value = ctx.value
 		local value_len = #value
@@ -63,7 +65,7 @@ local definition = {
 		local min_length = show_start + show_end + min_mask
 		if value_len < min_length then
 			-- Use fallback mode for short values
-			local fallback = self:get_option("fallback_mode", "full")
+			local fallback = opts.fallback_mode
 			if fallback == "none" then
 				return value
 			end

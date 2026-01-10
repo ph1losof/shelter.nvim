@@ -61,6 +61,14 @@ function M.new(definition)
 	self._validate = definition.validate
 	self._on_configure = definition.on_configure
 
+	-- PRE-RESOLVE: Apply schema defaults immediately so self.options is complete
+	-- This eliminates get_option() overhead during apply()
+	for key, schema in pairs(self.schema) do
+		if self.options[key] == nil and schema.default ~= nil then
+			self.options[key] = schema.default
+		end
+	end
+
 	-- Wrap apply function to support both method and function styles
 	local original_apply = definition.apply
 	self._apply = function(mode, ctx)
@@ -149,14 +157,16 @@ function M:configure(options)
 		error(string.format("shelter.nvim: Invalid options for mode '%s': %s", self.name, err))
 	end
 
-	-- Apply schema defaults, then merge user options
+	-- Merge user options
+	self.options = vim.tbl_deep_extend("force", self.options, options)
+
+	-- PRE-RESOLVE: Ensure all schema defaults are applied after merge
+	-- This keeps self.options complete for direct property access
 	for key, schema in pairs(self.schema) do
 		if self.options[key] == nil and schema.default ~= nil then
 			self.options[key] = schema.default
 		end
 	end
-
-	self.options = vim.tbl_deep_extend("force", self.options, options)
 
 	-- Call on_configure callback if provided
 	if self._on_configure then

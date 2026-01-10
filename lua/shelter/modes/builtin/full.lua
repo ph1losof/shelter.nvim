@@ -35,8 +35,10 @@ local definition = {
 	---@param ctx ShelterModeContext
 	---@return string
 	apply = function(self, ctx)
-		local mask_char = self:get_option("mask_char", "*")
-		local fixed_length = self:get_option("fixed_length")
+		-- Direct property access - options pre-resolved at config time
+		local opts = self.options
+		local mask_char = opts.mask_char
+		local fixed_length = opts.fixed_length
 
 		-- Pure Lua - faster than FFI for simple string operations
 		if fixed_length then

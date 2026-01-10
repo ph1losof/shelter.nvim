@@ -187,4 +187,3 @@ impl From<ShelterParseOptions> for korni::ParseOptions {
         }
     }
 }
-

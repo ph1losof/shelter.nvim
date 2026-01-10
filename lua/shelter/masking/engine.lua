@@ -140,8 +140,11 @@ function M.generate_masks(content, source)
 	-- Cache source basename once (avoid vim.fn.fnamemodify per entry)
 	local source_basename = source and vim.fn.fnamemodify(source, ":t") or nil
 
-	-- Memoize key→mode mapping for this batch (same keys get same mode)
-	local mode_memo = {}
+	-- Memoize key→mode name mapping for this batch
+	local mode_name_memo = {}
+
+	-- Cache mode INSTANCES to avoid modes.get() per entry
+	local mode_instance_cache = {}
 
 	for _, entry in ipairs(parsed.entries) do
 		-- Skip comments only if skip_comments is true
@@ -149,11 +152,18 @@ function M.generate_masks(content, source)
 		local should_skip = entry.is_comment and skip_comments
 
 		if not should_skip then
-			-- Check memoized mode first
-			local mode_name = mode_memo[entry.key]
+			-- Check memoized mode name first
+			local mode_name = mode_name_memo[entry.key]
 			if not mode_name then
 				mode_name = pattern_cache.determine_mode(entry.key, source_basename)
-				mode_memo[entry.key] = mode_name
+				mode_name_memo[entry.key] = mode_name
+			end
+
+			-- Get cached mode instance (avoids modes.get lookup per entry)
+			local mode = mode_instance_cache[mode_name]
+			if not mode then
+				mode = modes.get(mode_name)
+				mode_instance_cache[mode_name] = mode
 			end
 
 			local context = {
@@ -162,9 +172,12 @@ function M.generate_masks(content, source)
 				line_number = entry.line_number,
 				quote_type = entry.quote_type,
 				is_comment = entry.is_comment,
+				config = cfg,
+				value = entry.value,
 			}
 
-			local mask = M.mask_value(entry.value, context, cfg, mode_name)
+			-- Call mode:apply directly (skip modes.apply overhead)
+			local mask = mode:apply(context)
 
 			masks[#masks + 1] = {
 				line_number = entry.line_number,
