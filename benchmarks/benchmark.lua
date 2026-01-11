@@ -140,33 +140,39 @@ end
 -- EDIT BENCHMARKS (re-masking after text change)
 --------------------------------------------------------------------------------
 
----Benchmark shelter.nvim re-masking after edit
+---Benchmark shelter.nvim re-masking after edit (incremental path)
 ---@param content string
 ---@param iterations number
 ---@return number Average time in milliseconds
 local function benchmark_shelter_edit(content, iterations)
 	local buffer_mod = require("shelter.integrations.buffer")
 	local extmarks = require("shelter.integrations.buffer.extmarks")
+	local masking = require("shelter.masking")
 
 	-- Create buffer and set up
 	local bufnr = vim.api.nvim_create_buf(false, true)
-	vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(content, "\n"))
+	local lines = vim.split(content, "\n")
+	vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 	vim.bo[bufnr].filetype = "dotenv"
 	vim.api.nvim_set_current_buf(bufnr)
 
-	-- Initial mask
+	-- Initial mask to populate cache
 	buffer_mod.shelter_buffer(bufnr, true)
 
 	local total_time = 0
 	for i = 1, iterations do
 		-- Simulate edit (modify first line - like typing)
-		vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "MODIFIED_" .. i .. "=new_secret_value_xxxxx" })
+		local new_line = "MODIFIED_" .. i .. "=new_secret_value_xxxxx"
+		lines[1] = new_line
+		vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { new_line })
 
-		-- Clear extmarks (simulates what happens on re-mask)
-		extmarks.clear(bufnr)
+		-- Directly test incremental path (what on_lines callback does)
+		-- Clear only the affected range
+		extmarks.clear_range(bufnr, 0, 2)
 
 		local start = hrtime()
-		buffer_mod.shelter_buffer(bufnr, true) -- sync=true
+		-- Call with line_range to test incremental path
+		buffer_mod.shelter_buffer(bufnr, true, { min_line = 0, max_line = 1 })
 		local elapsed = hrtime() - start
 		total_time = total_time + elapsed
 	end

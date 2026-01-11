@@ -174,6 +174,7 @@ function M.generate_masks(content, source)
 	local skip_comments = cfg.skip_comments
 	local parsed = M.parse_content(content)
 	local masks = {}
+	local mask_count = 0
 
 	-- Cache source basename once (avoid vim.fn.fnamemodify per entry)
 	local source_basename = source and vim.fn.fnamemodify(source, ":t") or nil
@@ -183,6 +184,17 @@ function M.generate_masks(content, source)
 
 	-- Cache mode INSTANCES to avoid modes.get() per entry
 	local mode_instance_cache = {}
+
+	-- Reusable context table to avoid allocation per entry
+	local context = {
+		key = nil,
+		source = source,
+		line_number = nil,
+		quote_type = nil,
+		is_comment = nil,
+		config = cfg,
+		value = nil,
+	}
 
 	for _, entry in ipairs(parsed.entries) do
 		-- Skip comments only if skip_comments is true
@@ -204,34 +216,134 @@ function M.generate_masks(content, source)
 				mode_instance_cache[mode_name] = mode
 			end
 
-			local context = {
-				key = entry.key,
-				source = source,
-				line_number = entry.line_number,
-				quote_type = entry.quote_type,
-				is_comment = entry.is_comment,
-				config = cfg,
-				value = entry.value,
-			}
+			-- Update reusable context (no allocation)
+			context.key = entry.key
+			context.value = entry.value
+			context.line_number = entry.line_number
+			context.quote_type = entry.quote_type
+			context.is_comment = entry.is_comment
 
 			-- Call mode:apply directly (skip modes.apply overhead)
 			local mask = mode:apply(context)
 
-			masks[#masks + 1] = {
+			-- Direct indexed assignment (faster than #masks + 1)
+			mask_count = mask_count + 1
+			masks[mask_count] = {
 				line_number = entry.line_number,
 				value_end_line = entry.value_end_line,
 				mask = mask,
 				value_start = entry.value_start,
 				value_end = entry.value_end,
-				value = entry.value,
-				is_comment = entry.is_comment,
 				quote_type = entry.quote_type,
+				value = entry.value, -- Keep for tests/diagnostics (string ref, no copy)
 			}
 		end
 	end
 
 	return {
 		masks = masks,
+		line_offsets = parsed.line_offsets,
+	}
+end
+
+---Generate masks for specific line range only (incremental update)
+---Only processes entries in the affected range, merges with cached masks
+---@param content string Full buffer content
+---@param source string|nil
+---@param line_range {min_line: number, max_line: number} 1-indexed line range
+---@param cached_masks ShelterMaskedLine[] Previously cached masks
+---@return ShelterMaskResult
+function M.generate_masks_incremental(content, source, line_range, cached_masks)
+	local cfg = config.get()
+	local skip_comments = cfg.skip_comments
+	local parsed = M.parse_content(content)
+
+	-- Filter entries to only those in affected range
+	local affected_entries = {}
+	local affected_count = 0
+	for _, entry in ipairs(parsed.entries) do
+		if entry.line_number >= line_range.min_line and entry.line_number <= line_range.max_line then
+			affected_count = affected_count + 1
+			affected_entries[affected_count] = entry
+		end
+	end
+
+	-- Generate masks ONLY for affected entries
+	local source_basename = source and vim.fn.fnamemodify(source, ":t") or nil
+	local mode_name_memo = {}
+	local mode_instance_cache = {}
+	local new_masks = {}
+	local new_mask_count = 0
+
+	-- Reusable context table
+	local context = {
+		key = nil,
+		source = source,
+		line_number = nil,
+		quote_type = nil,
+		is_comment = nil,
+		config = cfg,
+		value = nil,
+	}
+
+	for _, entry in ipairs(affected_entries) do
+		local should_skip = entry.is_comment and skip_comments
+		if not should_skip then
+			local mode_name = mode_name_memo[entry.key]
+			if not mode_name then
+				mode_name = pattern_cache.determine_mode(entry.key, source_basename)
+				mode_name_memo[entry.key] = mode_name
+			end
+
+			local mode = mode_instance_cache[mode_name]
+			if not mode then
+				mode = modes.get(mode_name)
+				mode_instance_cache[mode_name] = mode
+			end
+
+			context.key = entry.key
+			context.value = entry.value
+			context.line_number = entry.line_number
+			context.quote_type = entry.quote_type
+			context.is_comment = entry.is_comment
+
+			local mask = mode:apply(context)
+
+			new_mask_count = new_mask_count + 1
+			new_masks[new_mask_count] = {
+				line_number = entry.line_number,
+				value_end_line = entry.value_end_line,
+				mask = mask,
+				value_start = entry.value_start,
+				value_end = entry.value_end,
+				quote_type = entry.quote_type,
+				value = entry.value, -- Keep for tests/diagnostics (string ref, no copy)
+			}
+		end
+	end
+
+	-- Merge with cached masks (keep masks outside range)
+	local merged_masks = {}
+	local merged_count = 0
+	for _, cached_mask in ipairs(cached_masks) do
+		if cached_mask.line_number < line_range.min_line or cached_mask.line_number > line_range.max_line then
+			merged_count = merged_count + 1
+			merged_masks[merged_count] = cached_mask
+		end
+	end
+	for _, new_mask in ipairs(new_masks) do
+		merged_count = merged_count + 1
+		merged_masks[merged_count] = new_mask
+	end
+
+	-- Sort by line number for consistent ordering
+	table.sort(merged_masks, function(a, b)
+		return a.line_number < b.line_number
+	end)
+
+	return {
+		masks = merged_masks,
+		masks_to_apply = new_masks, -- Only these need extmark update
 		line_offsets = parsed.line_offsets,
 	}
 end
