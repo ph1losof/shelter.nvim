@@ -27,19 +27,19 @@ Protect sensitive values in your environment files with intelligent, blazingly f
 ```lua
 {
   "philosofonusus/shelter.nvim",
-  build = "build.lua",
   config = function()
     require("shelter").setup({})
   end,
 }
 ```
 
+The native library is built automatically on first setup if Rust is installed. If the auto-build fails, run `:ShelterBuild` manually.
+
 ### packer.nvim
 
 ```lua
 use {
   "philosofonusus/shelter.nvim",
-  run = "build.lua",
   config = function()
     require("shelter").setup({})
   end,
