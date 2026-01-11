@@ -64,12 +64,17 @@ local function attach_buffer(bufnr)
 			end
 
 			-- Check if line count changed (lines added/removed via undo/redo, Enter, delete, etc.)
-			-- When lines shift, extmark positions can become inconsistent, so do full re-mask
 			if last_line ~= last_line_updated then
-				-- Line count changed - full re-mask to handle shifted extmarks
-				M.shelter_buffer(buf, true)
+				-- Line count changed - defer full re-mask to next event loop tick
+				-- This ensures buffer state is fully settled after undo/redo
+				buffer_content_hashes[buf] = nil
+				vim.schedule(function()
+					if nvim_buf_is_valid(buf) and state.is_enabled("files") then
+						M.shelter_buffer(buf, true)
+					end
+				end)
 			else
-				-- Same line count - incremental update is safe
+				-- Same line count - incremental update is safe and can be sync
 				local line_range = {
 					min_line = first_line,
 					max_line = last_line_updated,
