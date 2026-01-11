@@ -1,104 +1,24 @@
 # shelter.nvim
 
-<div align="center">
-
 ![Neovim](https://img.shields.io/badge/NeoVim-%2357A143.svg?&style=for-the-badge&logo=neovim&logoColor=white)
 ![Lua](https://img.shields.io/badge/lua-%232C2D72.svg?style=for-the-badge&logo=lua&logoColor=white)
 ![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)
 
-**Protect sensitive values in your environment files with intelligent, blazingly fast masking.**
+Protect sensitive values in your environment files with intelligent, blazingly fast masking.
 
-[Features](#features) •
-[Installation](#installation) •
-[Configuration](#configuration) •
-[Performance](#performance)
+[Installation](#installation) • [Quick Start](#quick-start) • [Configuration](#configuration) • [Modes](#modes) • [API](#api) • [Performance](#performance) • [vs cloak.nvim](#comparison-with-cloaknvim)
 
-</div>
+## Why shelter.nvim?
 
----
-
-## Highlights
-
-| | |
-|---|---|
-| **Blazingly Fast** | 1.1x-5x faster than alternatives with Rust-native parsing |
-| **Instant Feedback** | Zero debounce - masks update immediately as you type |
-| **Smart Re-masking** | Only re-processes changed lines, not the entire buffer |
-| **EDF Compliant** | Full support for quotes, escapes, and multi-line values |
-| **Extensible** | Factory pattern mode system with unlimited custom modes |
-
----
-
-## Table of Contents
-
-<details>
-<summary>Click to expand</summary>
-
-- [Features](#features)
-- [Installation](#installation)
-  - [Requirements](#requirements)
-  - [lazy.nvim](#lazynvim)
-  - [packer.nvim](#packernvim)
-- [Usage](#usage)
-  - [Quick Start](#quick-start)
-  - [Commands](#commands)
-- [Configuration](#configuration)
-  - [Full Options](#full-options)
-  - [Mode Configuration](#mode-configuration)
-  - [Pattern Matching](#pattern-matching)
-- [Mode System](#mode-system)
-  - [Built-in Modes](#built-in-modes)
-  - [Custom Modes](#custom-modes)
-  - [Mode Context](#mode-context)
-- [Performance](#performance)
-  - [Benchmarks](#benchmarks)
-  - [Why So Fast?](#why-so-fast)
-- [Comparison with cloak.nvim](#comparison-with-cloaknvim)
-- [API Reference](#api-reference)
-- [Architecture](#architecture)
-- [License](#license)
-
-</details>
-
----
-
-## Features
-
-<table>
-<tr>
-<td width="50%">
-
-### Core
-
-- **Buffer Masking** - Auto-mask values in `.env` files on open
-- **Line Peek** - Reveal values temporarily with `:Shelter peek`
-- **Quote Preservation** - Masks preserve surrounding quotes visually
-
-</td>
-<td width="50%">
-
-### Integrations
-
-- **Telescope** - Mask values in file previews
-- **FZF-lua** - Mask values in file previews
-- **Snacks.nvim** - Mask values in file previews
-- **Completion** - Auto-disable nvim-cmp/blink-cmp
-
-</td>
-</tr>
-</table>
-
----
+- **Fast** — Rust-native parsing, 1.1x-5x faster than alternatives
+- **Instant** — Zero debounce, masks update as you type
+- **Smart** — Only re-processes changed lines, not the entire buffer
+- **Compliant** — Full EDF support for quotes, escapes, and multi-line values
+- **Extensible** — Custom modes with a simple factory pattern
 
 ## Installation
 
-### Requirements
-
-| Requirement | Version |
-|-------------|---------|
-| Neovim | 0.9+ |
-| LuaJIT | Included with Neovim |
-| Rust | For building native library |
+**Requirements:** Neovim 0.9+, Rust (for building)
 
 ### lazy.nvim
 
@@ -124,90 +44,57 @@ use {
 }
 ```
 
----
+## Quick Start
 
-## Usage
-
-### Quick Start
-
-<table>
-<tr>
-<td>
-
-**Minimal**
 ```lua
+-- Minimal setup
 require("shelter").setup({})
-```
 
-</td>
-<td>
-
-**With Telescope**
-```lua
+-- With Telescope integration
 require("shelter").setup({
   modules = {
     files = true,
     telescope_previewer = true,
   },
 })
-```
 
-</td>
-<td>
-
-**Partial Masking**
-```lua
+-- With partial masking (show first/last characters)
 require("shelter").setup({
   default_mode = "partial",
 })
 ```
 
-</td>
-</tr>
-</table>
-
-### Commands
+## Commands
 
 | Command | Description |
 |---------|-------------|
 | `:Shelter toggle [module]` | Toggle masking on/off |
 | `:Shelter enable [module]` | Enable masking |
 | `:Shelter disable [module]` | Disable masking |
-| `:Shelter peek` | Reveal current line (3 seconds) |
+| `:Shelter peek` | Reveal current line temporarily |
 | `:Shelter info` | Show status and modes |
 | `:Shelter build` | Rebuild native library |
 
-**Available modules:** `files`, `telescope_previewer`, `fzf_previewer`, `snacks_previewer`
-
----
+**Modules:** `files`, `telescope_previewer`, `fzf_previewer`, `snacks_previewer`
 
 ## Configuration
-
-### Full Options
 
 ```lua
 require("shelter").setup({
   -- Appearance
-  mask_char = "*",                           -- Character used for masking
-  highlight_group = "Comment",               -- Highlight group for masked text
+  mask_char = "*",
+  highlight_group = "Comment",
 
   -- Behavior
-  skip_comments = true,                      -- Skip masking in comment lines
-  default_mode = "full",                     -- "full" | "partial" | "none" | custom
-  env_filetypes = { "dotenv", "sh", "conf" }, -- Filetypes to mask
-
-  -- Mode configurations (see Mode System section)
-  modes = { ... },
-
-  -- Pattern matching (see Pattern Matching section)
-  patterns = { ... },
-  sources = { ... },
+  skip_comments = true,
+  default_mode = "full",  -- "full", "partial", "none", or custom
+  env_filetypes = { "dotenv", "sh", "conf" },
 
   -- Module toggles
   modules = {
     files = {
-      shelter_on_leave = true,               -- Re-shelter when leaving buffer
-      disable_cmp = true,                    -- Disable completion in env files
+      shelter_on_leave = true,
+      disable_cmp = true,
     },
     telescope_previewer = false,
     fzf_previewer = false,
@@ -216,71 +103,39 @@ require("shelter").setup({
 })
 ```
 
-### Mode Configuration
+## Modes
+
+### Built-in Modes
+
+| Mode | Example | Description |
+|------|---------|-------------|
+| `full` | `secret123` → `*********` | Mask all characters |
+| `partial` | `secret123` → `sec****123` | Show start/end |
+| `none` | `secret123` → `secret123` | No masking |
+
+### Mode Options
 
 ```lua
 modes = {
   full = {
     mask_char = "*",
     preserve_length = true,
-    -- fixed_length = 8,  -- Override with fixed length
+    -- fixed_length = 8,  -- Use fixed length instead
   },
   partial = {
-    show_start = 3,                          -- Characters visible at start
-    show_end = 3,                            -- Characters visible at end
-    min_mask = 3,                            -- Minimum masked characters
-    fallback_mode = "full",                  -- For short values
+    show_start = 3,
+    show_end = 3,
+    min_mask = 3,
+    fallback_mode = "full",
   },
 }
 ```
-
-### Pattern Matching
-
-#### Key Patterns (Glob Syntax)
-
-```lua
-patterns = {
-  ["*_KEY"] = "full",        -- API_KEY, SECRET_KEY
-  ["*_PUBLIC*"] = "none",    -- PUBLIC_KEY, MY_PUBLIC_VAR
-  ["DB_*"] = "partial",      -- DB_HOST, DB_PASSWORD
-  ["DEBUG"] = "none",        -- Exact match
-}
-```
-
-#### Source File Patterns
-
-```lua
-sources = {
-  [".env.local"] = "none",
-  [".env.production"] = "full",
-  [".env.*.local"] = "none",
-}
-```
-
-#### Priority Order
-
-1. Specific key pattern match
-2. Specific source pattern match
-3. Default mode
-
----
-
-## Mode System
-
-### Built-in Modes
-
-| Mode | Input | Output | Description |
-|------|-------|--------|-------------|
-| `full` | `secret123` | `*********` | Mask all characters |
-| `partial` | `secret123` | `sec****123` | Show start/end, mask middle |
-| `none` | `secret123` | `secret123` | No masking |
 
 ### Custom Modes
 
 ```lua
 require("shelter").setup({
   modes = {
-    -- Simple: Replace with fixed text
     redact = {
       description = "Replace with [REDACTED]",
       apply = function(self, ctx)
@@ -288,7 +143,6 @@ require("shelter").setup({
       end,
     },
 
-    -- Advanced: With configurable options
     truncate = {
       description = "Truncate with suffix",
       schema = {
@@ -313,7 +167,7 @@ require("shelter").setup({
 
 ### Mode Context
 
-The `ctx` parameter passed to custom mode `apply` functions:
+The `ctx` parameter in custom modes:
 
 ```lua
 ---@class ShelterModeContext
@@ -326,11 +180,50 @@ The `ctx` parameter passed to custom mode `apply` functions:
 ---@field config table         -- Plugin config
 ```
 
----
+## Pattern Matching
+
+### Key Patterns (Glob Syntax)
+
+```lua
+patterns = {
+  ["*_KEY"] = "full",        -- API_KEY, SECRET_KEY
+  ["*_PUBLIC*"] = "none",    -- PUBLIC_KEY, MY_PUBLIC_VAR
+  ["DB_*"] = "partial",      -- DB_HOST, DB_PASSWORD
+  ["DEBUG"] = "none",        -- Exact match
+}
+```
+
+### Source File Patterns
+
+```lua
+sources = {
+  [".env.local"] = "none",
+  [".env.production"] = "full",
+  [".env.*.local"] = "none",
+}
+```
+
+**Priority:** Key pattern → Source pattern → Default mode
+
+## API
+
+```lua
+local shelter = require("shelter")
+```
+
+| Function | Description |
+|----------|-------------|
+| `shelter.setup(opts)` | Initialize plugin |
+| `shelter.is_enabled(module)` | Check if module is enabled |
+| `shelter.toggle(module)` | Toggle module on/off |
+| `shelter.get_config()` | Get current configuration |
+| `shelter.peek()` | Reveal current line temporarily |
+| `shelter.info()` | Show plugin status |
+| `shelter.build()` | Rebuild native library |
+| `shelter.register_mode(name, def)` | Register custom mode |
+| `shelter.mask_value(value, opts)` | Mask a value directly |
 
 ## Performance
-
-### Benchmarks
 
 <!-- BENCHMARK_START -->
 ### Performance Benchmarks
@@ -341,85 +234,57 @@ Measured on GitHub Actions (Ubuntu, averaged over 1000 iterations):
 
 | Lines | shelter.nvim | cloak.nvim | Difference |
 |-------|--------------|------------|------------|
-| 10    | 0.01 ms      | 0.04 ms      | 3.4x faster |
-| 50    | 0.06 ms      | 0.18 ms      | 3.0x faster |
-| 100    | 0.15 ms      | 0.38 ms      | 2.6x faster |
-| 500    | 0.56 ms      | 1.84 ms      | 3.3x faster |
+| 10    | 0.01 ms      | 0.04 ms      | 3.5x faster |
+| 50    | 0.07 ms      | 0.19 ms      | 2.6x faster |
+| 100    | 0.13 ms      | 0.36 ms      | 2.9x faster |
+| 500    | 0.59 ms      | 1.79 ms      | 3.0x faster |
 
 #### Preview Performance (Telescope)
 
 | Lines | shelter.nvim | cloak.nvim | Difference |
 |-------|--------------|------------|------------|
-| 10    | 0.01 ms      | 0.05 ms      | 4.2x faster |
-| 50    | 0.07 ms      | 0.18 ms      | 2.5x faster |
-| 100    | 0.15 ms      | 0.36 ms      | 2.4x faster |
-| 500    | 0.52 ms      | 1.86 ms      | 3.5x faster |
+| 10    | 0.01 ms      | 0.05 ms      | 3.8x faster |
+| 50    | 0.07 ms      | 0.19 ms      | 2.9x faster |
+| 100    | 0.13 ms      | 0.39 ms      | 3.0x faster |
+| 500    | 0.56 ms      | 1.96 ms      | 3.5x faster |
 
 #### Edit Re-masking Performance
 
 | Lines | shelter.nvim | cloak.nvim | Difference |
 |-------|--------------|------------|------------|
-| 10    | 0.04 ms      | 0.05 ms      | 1.3x faster |
-| 50    | 0.17 ms      | 0.21 ms      | 1.2x faster |
-| 100    | 0.36 ms      | 0.36 ms      | ~same |
-| 500    | 1.70 ms      | 1.79 ms      | 1.1x faster |
+| 10    | 0.04 ms      | 0.05 ms      | 1.2x faster |
+| 50    | 0.17 ms      | 0.19 ms      | 1.1x faster |
+| 100    | 0.37 ms      | 0.34 ms      | 1.1x slower |
+| 500    | 1.71 ms      | 1.73 ms      | ~same |
 
 *Last updated: 2026-01-11*
 <!-- BENCHMARK_END -->
 
 ### Why So Fast?
 
-| Optimization | Description |
-|--------------|-------------|
-| **Rust-Native Parsing** | EDF parsing via LuaJIT FFI - no Lua pattern matching overhead |
-| **Line-Specific Re-masking** | On edit, only affected lines are re-processed |
-| **Zero Debounce** | Instant mask updates with `nvim_buf_attach` on_lines callback |
-| **Pre-computed Offsets** | O(1) byte-to-line conversion from Rust |
-
----
+- **Rust-Native Parsing** — EDF parsing via LuaJIT FFI, no Lua pattern overhead
+- **Line-Specific Re-masking** — Only affected lines are re-processed
+- **Zero Debounce** — Instant updates with `nvim_buf_attach`
+- **Pre-computed Offsets** — O(1) byte-to-line conversion
 
 ## Comparison with cloak.nvim
 
 | Feature | shelter.nvim | cloak.nvim |
 |---------|--------------|------------|
-| **Performance** | 1.1x-5x faster | Pure Lua |
-| **Re-masking** | Line-specific (instant) | Full buffer |
-| **Partial Masking** | Built-in mode | Pattern workaround |
-| **Multi-line Values** | Full support | None |
-| **Quote Handling** | EDF compliant | Pattern-dependent |
-| **Preview Support** | Telescope, FZF, Snacks | Telescope only |
-| **Completion Disable** | nvim-cmp + blink-cmp | nvim-cmp only |
-| **Custom Modes** | Factory pattern | Lua patterns |
-| **Runtime Info** | `:Shelter info` | None |
-| **Build Step** | Requires Rust | None |
-| **Any Filetype** | Env files only | Any filetype |
-| **Lines of Code** | ~2500 LOC | ~300 LOC |
+| Performance | ✅ 1.1x-5x faster | 🟡 Pure Lua |
+| Re-masking | ✅ Line-specific | 🟡 Full buffer |
+| Partial masking | ✅ Built-in | 🟡 Pattern workaround |
+| Multi-line values | ✅ Full support | ❌ None |
+| Quote handling | ✅ EDF compliant | 🟡 Pattern-dependent |
+| Preview support | ✅ Telescope, FZF, Snacks | 🟡 Telescope only |
+| Completion disable | ✅ nvim-cmp + blink-cmp | 🟡 nvim-cmp only |
+| Custom modes | ✅ Factory pattern | 🟡 Lua patterns |
+| Build step | 🟡 Requires Rust | ✅ None |
+| File types | 🟡 Env files only | ✅ Any filetype |
 
-> **Choose shelter.nvim** for dotenv files with maximum performance and features.
->
-> **Choose cloak.nvim** for any filetype with minimal setup.
+**Choose shelter.nvim** for dotenv files with maximum performance and features.
 
----
-
-## API Reference
-
-```lua
-local shelter = require("shelter")
-```
-
-| Category | Function | Description |
-|----------|----------|-------------|
-| **Setup** | `shelter.setup(opts)` | Initialize plugin with options |
-| **State** | `shelter.is_enabled(module)` | Check if module is enabled |
-| | `shelter.toggle(module)` | Toggle module on/off |
-| | `shelter.get_config()` | Get current configuration |
-| **Actions** | `shelter.peek()` | Reveal current line temporarily |
-| | `shelter.info()` | Show plugin status |
-| | `shelter.build()` | Rebuild native library |
-| **Modes** | `shelter.register_mode(name, def)` | Register custom mode |
-| | `shelter.mask_value(value, opts)` | Mask a value directly |
-
----
+**Choose cloak.nvim** for any filetype with minimal setup.
 
 ## Architecture
 
@@ -438,14 +303,10 @@ local shelter = require("shelter")
 └─────────────────────────────────────────────────────────┘
 ```
 
-| Component | Responsibility |
-|-----------|----------------|
-| **Engine** | Coordinates parsing, mode selection, and mask generation |
-| **Mode Factory** | Creates and manages masking mode instances |
-| **Extmarks** | Applies masks via Neovim's extmark API with virtual text |
-| **nvim_buf_attach** | Tracks line changes for instant re-masking |
-
----
+- **Engine** — Coordinates parsing, mode selection, and mask generation
+- **Mode Factory** — Creates and manages masking mode instances
+- **Extmarks** — Applies masks via Neovim's extmark API
+- **nvim_buf_attach** — Tracks line changes for instant re-masking
 
 ## License
 
