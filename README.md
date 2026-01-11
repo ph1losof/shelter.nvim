@@ -333,38 +333,38 @@ The `ctx` parameter passed to custom mode `apply` functions:
 ### Benchmarks
 
 <!-- BENCHMARK_START -->
+### Performance Benchmarks
 
-Measured on GitHub Actions (Ubuntu, averaged over 100 iterations):
+Measured on GitHub Actions (Ubuntu, averaged over 1000 iterations):
 
 #### Parsing Performance
 
-| Lines | shelter.nvim | cloak.nvim | Difference  |
-| ----- | ------------ | ---------- | ----------- |
-| 10    | 0.03 ms      | 0.05 ms    | 1.9x faster |
-| 50    | 0.05 ms      | 0.18 ms    | 3.7x faster |
-| 100   | 0.08 ms      | 0.36 ms    | 4.6x faster |
-| 500   | 0.37 ms      | 1.78 ms    | 4.8x faster |
+| Lines | shelter.nvim | cloak.nvim | Difference |
+|-------|--------------|------------|------------|
+| 10    | 0.01 ms      | 0.04 ms      | 3.4x faster |
+| 50    | 0.06 ms      | 0.18 ms      | 3.0x faster |
+| 100    | 0.15 ms      | 0.38 ms      | 2.6x faster |
+| 500    | 0.56 ms      | 1.84 ms      | 3.3x faster |
 
 #### Preview Performance (Telescope)
 
-| Lines | shelter.nvim | cloak.nvim | Difference  |
-| ----- | ------------ | ---------- | ----------- |
-| 10    | 0.03 ms      | 0.05 ms    | 1.7x faster |
-| 50    | 0.05 ms      | 0.18 ms    | 3.5x faster |
-| 100   | 0.06 ms      | 0.37 ms    | 5.8x faster |
-| 500   | 0.41 ms      | 1.92 ms    | 4.7x faster |
+| Lines | shelter.nvim | cloak.nvim | Difference |
+|-------|--------------|------------|------------|
+| 10    | 0.01 ms      | 0.05 ms      | 4.2x faster |
+| 50    | 0.07 ms      | 0.18 ms      | 2.5x faster |
+| 100    | 0.15 ms      | 0.36 ms      | 2.4x faster |
+| 500    | 0.52 ms      | 1.86 ms      | 3.5x faster |
 
 #### Edit Re-masking Performance
 
-| Lines | shelter.nvim | cloak.nvim | Difference  |
-| ----- | ------------ | ---------- | ----------- |
-| 10    | 0.04 ms      | 0.05 ms    | 1.4x faster |
-| 50    | 0.15 ms      | 0.19 ms    | 1.2x faster |
-| 100   | 0.32 ms      | 0.38 ms    | 1.2x faster |
-| 500   | 1.81 ms      | 1.70 ms    | 1.1x slower |
+| Lines | shelter.nvim | cloak.nvim | Difference |
+|-------|--------------|------------|------------|
+| 10    | 0.04 ms      | 0.05 ms      | 1.3x faster |
+| 50    | 0.17 ms      | 0.21 ms      | 1.2x faster |
+| 100    | 0.36 ms      | 0.36 ms      | ~same |
+| 500    | 1.70 ms      | 1.79 ms      | 1.1x faster |
 
-_Last updated: 2026-01-10_
-
+*Last updated: 2026-01-11*
 <!-- BENCHMARK_END -->
 
 ### Why So Fast?
