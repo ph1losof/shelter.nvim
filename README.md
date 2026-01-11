@@ -237,27 +237,27 @@ Measured on GitHub Actions (Ubuntu, averaged over 10000 iterations):
 | Lines | shelter.nvim | cloak.nvim | Difference |
 |-------|--------------|------------|------------|
 | 10    | 0.01 ms      | 0.05 ms      | 4.2x faster |
-| 50    | 0.06 ms      | 0.19 ms      | 3.1x faster |
-| 100    | 0.11 ms      | 0.35 ms      | 3.2x faster |
-| 500    | 0.50 ms      | 1.76 ms      | 3.5x faster |
+| 50    | 0.06 ms      | 0.18 ms      | 3.2x faster |
+| 100    | 0.11 ms      | 0.37 ms      | 3.3x faster |
+| 500    | 0.48 ms      | 1.76 ms      | 3.7x faster |
 
 #### Preview Performance (Telescope)
 
 | Lines | shelter.nvim | cloak.nvim | Difference |
 |-------|--------------|------------|------------|
 | 10    | 0.01 ms      | 0.05 ms      | 6.6x faster |
-| 50    | 0.03 ms      | 0.19 ms      | 7.2x faster |
-| 100    | 0.04 ms      | 0.38 ms      | 9.2x faster |
-| 500    | 0.20 ms      | 1.84 ms      | 9.1x faster |
+| 50    | 0.03 ms      | 0.19 ms      | 7.6x faster |
+| 100    | 0.05 ms      | 0.36 ms      | 7.6x faster |
+| 500    | 0.20 ms      | 1.82 ms      | 8.9x faster |
 
 #### Edit Re-masking Performance
 
 | Lines | shelter.nvim | cloak.nvim | Difference |
 |-------|--------------|------------|------------|
-| 10    | 0.04 ms      | 0.05 ms      | 1.3x faster |
-| 50    | 0.16 ms      | 0.19 ms      | 1.2x faster |
-| 100    | 0.31 ms      | 0.37 ms      | 1.2x faster |
-| 500    | 1.60 ms      | 1.78 ms      | 1.1x faster |
+| 10    | 0.02 ms      | 0.05 ms      | 2.7x faster |
+| 50    | 0.04 ms      | 0.19 ms      | 5.5x faster |
+| 100    | 0.07 ms      | 0.37 ms      | 5.7x faster |
+| 500    | 0.34 ms      | 1.82 ms      | 5.3x faster |
 
 *Last updated: 2026-01-11*
 <!-- BENCHMARK_END -->
