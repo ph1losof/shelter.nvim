@@ -26,7 +26,8 @@ Protect sensitive values in your environment files with intelligent, blazingly f
 
 ```lua
 {
-  "philosofonusus/shelter.nvim",
+  "ph1losof/shelter.nvim",
+  lazy = false,
   config = function()
     require("shelter").setup({})
   end,
@@ -39,7 +40,7 @@ The native library is built automatically on first setup if Rust is installed. I
 
 ```lua
 use {
-  "philosofonusus/shelter.nvim",
+  "ph1losof/shelter.nvim",
   config = function()
     require("shelter").setup({})
   end,
@@ -229,54 +230,56 @@ local shelter = require("shelter")
 
 ### Feature Comparison
 
-| Feature | shelter.nvim | cloak.nvim |
-|---------|--------------|------------|
-| **Performance** | ✅ 3-12x faster (Rust-native) | 🟡 Pure Lua |
-| **Re-masking** | ✅ Line-specific (incremental) | 🟡 Full buffer re-parse |
-| **Partial masking** | ✅ Built-in mode | 🟡 Manual pattern workaround |
-| **Multi-line values** | ✅ Full support | ❌ Not supported |
-| **Quote handling** | ✅ EDF compliant | 🟡 Pattern-dependent |
-| **Preview support** | ✅ Telescope, FZF, Snacks | 🟡 Telescope only |
-| **Completion disable** | ✅ nvim-cmp + blink-cmp | 🟡 nvim-cmp only |
-| **Custom modes** | ✅ Factory pattern | 🟡 Lua patterns |
-| **Build step** | 🟡 Requires Rust | ✅ None |
-| **File types** | 🟡 Env files only | ✅ Any filetype |
+| Feature                | shelter.nvim                   | cloak.nvim                   |
+| ---------------------- | ------------------------------ | ---------------------------- |
+| **Performance**        | ✅ 3-12x faster (Rust-native)  | 🟡 Pure Lua                  |
+| **Re-masking**         | ✅ Line-specific (incremental) | 🟡 Full buffer re-parse      |
+| **Partial masking**    | ✅ Built-in mode               | 🟡 Manual pattern workaround |
+| **Multi-line values**  | ✅ Full support                | ❌ Not supported             |
+| **Quote handling**     | ✅ EDF compliant               | 🟡 Pattern-dependent         |
+| **Preview support**    | ✅ Telescope, FZF, Snacks      | 🟡 Telescope only            |
+| **Completion disable** | ✅ nvim-cmp + blink-cmp        | 🟡 nvim-cmp only             |
+| **Custom modes**       | ✅ Factory pattern             | 🟡 Lua patterns              |
+| **Build step**         | 🟡 Requires Rust               | ✅ None                      |
+| **File types**         | 🟡 Env files only              | ✅ Any filetype              |
 
 ### Performance Benchmarks
 
 <!-- BENCHMARK_START -->
+
 ### Performance Benchmarks
 
 Measured on GitHub Actions (Ubuntu, averaged over 10000 iterations):
 
 #### Parsing Performance
 
-| Lines | shelter.nvim | cloak.nvim | Difference |
-|-------|--------------|------------|------------|
-| 10    | 0.01 ms      | 0.04 ms      | 3.9x faster |
-| 50    | 0.06 ms      | 0.18 ms      | 3.0x faster |
-| 100    | 0.11 ms      | 0.36 ms      | 3.4x faster |
-| 500    | 0.47 ms      | 1.74 ms      | 3.7x faster |
+| Lines | shelter.nvim | cloak.nvim | Difference  |
+| ----- | ------------ | ---------- | ----------- |
+| 10    | 0.01 ms      | 0.04 ms    | 3.9x faster |
+| 50    | 0.06 ms      | 0.18 ms    | 3.0x faster |
+| 100   | 0.11 ms      | 0.36 ms    | 3.4x faster |
+| 500   | 0.47 ms      | 1.74 ms    | 3.7x faster |
 
 #### Preview Performance (Telescope)
 
-| Lines | shelter.nvim | cloak.nvim | Difference |
-|-------|--------------|------------|------------|
-| 10    | 0.01 ms      | 0.05 ms      | 6.6x faster |
-| 50    | 0.02 ms      | 0.19 ms      | 7.8x faster |
-| 100    | 0.05 ms      | 0.35 ms      | 7.7x faster |
-| 500    | 0.20 ms      | 1.79 ms      | 9.2x faster |
+| Lines | shelter.nvim | cloak.nvim | Difference  |
+| ----- | ------------ | ---------- | ----------- |
+| 10    | 0.01 ms      | 0.05 ms    | 6.6x faster |
+| 50    | 0.02 ms      | 0.19 ms    | 7.8x faster |
+| 100   | 0.05 ms      | 0.35 ms    | 7.7x faster |
+| 500   | 0.20 ms      | 1.79 ms    | 9.2x faster |
 
 #### Edit Re-masking Performance
 
-| Lines | shelter.nvim | cloak.nvim | Difference |
-|-------|--------------|------------|------------|
-| 10    | 0.02 ms      | 0.05 ms      | 2.7x faster |
-| 50    | 0.03 ms      | 0.19 ms      | 5.6x faster |
-| 100    | 0.07 ms      | 0.37 ms      | 5.6x faster |
-| 500    | 0.35 ms      | 1.79 ms      | 5.1x faster |
+| Lines | shelter.nvim | cloak.nvim | Difference  |
+| ----- | ------------ | ---------- | ----------- |
+| 10    | 0.02 ms      | 0.05 ms    | 2.7x faster |
+| 50    | 0.03 ms      | 0.19 ms    | 5.6x faster |
+| 100   | 0.07 ms      | 0.37 ms    | 5.6x faster |
+| 500   | 0.35 ms      | 1.79 ms    | 5.1x faster |
 
-*Last updated: 2026-01-11*
+_Last updated: 2026-01-11_
+
 <!-- BENCHMARK_END -->
 
 ### Why So Fast?
