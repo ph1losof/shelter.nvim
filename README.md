@@ -100,7 +100,7 @@ require("shelter").setup({
   -- Behavior
   skip_comments = true,         -- Don't mask commented lines
   default_mode = "full",        -- "full", "partial", "none", or custom
-  env_filetypes = { "dotenv", "sh", "conf" },  -- Filetypes to mask
+  env_filetypes = { "dotenv", "edf", "sh", "conf" },  -- Filetypes to mask
 
   -- Module toggles (see Modules section for details)
   modules = {
@@ -131,6 +131,42 @@ require("shelter").setup({
   },
 })
 ```
+
+### A note on filetypes
+
+Neovim's default filetype detection doesn't assign `dotenv` to `.env` files out of
+the box; variants like `.env.local` or `.env.production` can also be inconsistent
+or detected correctly only after the file is opened.
+
+This matters because we rely on Neovim's filetype detection, so if a file you'd
+like to shelter is not explicitly mapped to a filetype, shelter.nvim may not be active
+at all or may not work correctly in previews.
+
+Custom mappings can be added using the `vim.filetype.add` API. For example, you
+can create a file in your Neovim runtime path (usually `~/.config/nvim/filetype.lua`)
+and add the following:
+
+```lua
+vim.filetype.add({
+  -- Mappings based on file extension
+  extension = {
+    env = "dotenv",
+  },
+  -- Mappings based on FULL filename
+  filename = {
+    [".env"] = "dotenv",
+    ["env"] = "dotenv",
+  },
+  -- Mappings based on filename pattern match
+  pattern = {
+    -- Match filenames like ".env.development", "env.local" and so on
+    [".?env.*"] = "dotenv",
+  },
+})
+```
+
+This can be done with any filetype you want, but don't forget to add them to the
+`env_filetypes` configuration option as well!
 
 ## Modules
 
@@ -503,11 +539,13 @@ The benchmarks also include a **Pure Lua** baseline — simple Lua pattern match
 - **Mode Factory** — Creates and manages masking mode instances
 - **Extmarks** — Applies masks via Neovim's extmark API
 - **nvim_buf_attach** — Tracks line changes for instant re-masking
+- **EDF** — File format specification that korni uses to parse `.env` files
 
 ## Related Projects
 
 - **[ecolog.nvim](https://github.com/ph1losof/ecolog.nvim)** — LSP-powered environment variable management
 - **[ecolog-lsp](https://github.com/ph1losof/ecolog-lsp)** — The Language Server providing env var analysis
+- **[ecolog-spec](https://github.com/ph1losof/ecolog-spec)** — EDF Specification
 - **[korni](https://github.com/ph1losof/korni)** — Zero-copy `.env` file parser (used internally)
 
 ## License
