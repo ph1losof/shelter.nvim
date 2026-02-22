@@ -108,6 +108,7 @@ require("shelter").setup({
     telescope_previewer = false,
     fzf_previewer = false,
     snacks_previewer = false,
+    oil_previewer = false,
     ecolog = false,             -- ecolog.nvim integration
   },
 
@@ -223,6 +224,16 @@ Mask values in Snacks.nvim file previews.
 ```lua
 modules = {
   snacks_previewer = true,
+}
+```
+
+### oil_previewer
+
+Mask values in oil.nvim file previews.
+
+```lua
+modules = {
+  oil_previewer = true,
 }
 ```
 
